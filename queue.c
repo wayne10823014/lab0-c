@@ -140,6 +140,7 @@ bool q_delete_mid(struct list_head *head)
 bool q_delete_dup(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/
+
     return true;
 }
 
@@ -147,6 +148,19 @@ bool q_delete_dup(struct list_head *head)
 void q_swap(struct list_head *head)
 {
     // https://leetcode.com/problems/swap-nodes-in-pairs/
+    if (head == NULL || list_empty(head))
+        return;
+    struct list_head *cur = head->next, *next = head->next->next;
+    while (cur != head && next != head) {
+        cur->prev->next = next;
+        next->next->prev = cur;
+        cur->next = next->next;
+        next->prev = cur->prev;
+        cur->prev = next;
+        next->next = cur;
+        cur = cur->next;
+        next = cur->next;
+    }
 }
 
 /* Reverse elements in queue */
@@ -171,7 +185,7 @@ void q_reverseK(struct list_head *head, int k)
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
 }
 
-/* Sort elements of queue in ascending/descending order */
+// Sort elements of queue in ascending order
 void q_sort(struct list_head *head, bool descend) {}
 
 /* Remove every node which has a node with a strictly less value anywhere to
