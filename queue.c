@@ -1,8 +1,8 @@
+#include "queue.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "queue.h"
 
 /* Notice: sometimes, Cppcheck would find the potential NULL pointer bugs,
  * but some of them cannot occur. You can suppress them by adding the
@@ -186,34 +186,58 @@ void q_reverseK(struct list_head *head, int k)
 }
 
 // Sort elements of queue in ascending order
-void q_sort(struct list_head *head, bool descend)
+void merge_two_list(struct list_head *head,
+                    struct list_head *left,
+                    struct list_head *right,
+                    bool descend)
 {
-    if (list_empty(head) || list_is_singular(head)) {
-        return;
-    }
+    LIST_HEAD(tmp);
 
-    struct list_head large_head;
-    struct list_head small_head;
-    element_t *node, *current_node, *safe;
-
-    INIT_LIST_HEAD(&large_head);
-    INIT_LIST_HEAD(&small_head);
-
-    node = list_last_entry(head, element_t, list);
-    list_del(&node->list);
-
-    list_for_each_entry_safe (current_node, safe, head, list) {
-        if (strcmp(current_node->value, node->value) < 0) {
-            list_move_tail(&current_node->list, &small_head);
+    while (!list_empty(left) && !list_empty(right)) {
+        element_t *left_entry = list_entry(left->next, element_t, list);
+        element_t *right_entry = list_entry(right->next, element_t, list);
+        if (descend ? strcmp(left_entry->value, right_entry->value) > 0
+                    : strcmp(left_entry->value, right_entry->value) < 0) {
+            list_move_tail(left->next, &tmp);
         } else {
-            list_move_tail(&current_node->list, &large_head);
+            list_move_tail(right->next, &tmp);
         }
     }
-    q_sort(&large_head, descend);
-    q_sort(&small_head, descend);
-    list_add(&node->list, head);
-    list_splice(&small_head, head);
-    list_splice_tail(&large_head, head);
+    if (list_empty(left)) {
+        list_splice_tail_init(right, &tmp);
+    }
+    if (list_empty(right)) {
+        list_splice_tail_init(left, &tmp);
+    }
+    list_splice_init(&tmp, head);
+}
+void merge_sort(struct list_head *head, bool descend)
+{
+    if (!head || list_empty(head) || list_is_singular(head))
+        return;
+
+    struct list_head *mid = head;
+    for (struct list_head *fast = head->next;
+         fast != head && fast->next != head; fast = fast->next->next)
+        mid = mid->next;
+
+    LIST_HEAD(left);
+    LIST_HEAD(right);
+
+    list_cut_position(&left, head, mid);
+    list_splice_init(head, &right);
+
+    merge_sort(&left, descend);
+    merge_sort(&right, descend);
+
+    merge_two_list(head, &left, &right, descend);
+}
+
+void q_sort(struct list_head *head, bool descend)
+{
+    if (!head || list_empty(head))
+        return;
+    merge_sort(head, descend);
 }
 
 /* Remove every node which has a node with a strictly less value anywhere to
