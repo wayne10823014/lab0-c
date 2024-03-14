@@ -186,7 +186,35 @@ void q_reverseK(struct list_head *head, int k)
 }
 
 // Sort elements of queue in ascending order
-void q_sort(struct list_head *head, bool descend) {}
+void q_sort(struct list_head *head, bool descend)
+{
+    if (list_empty(head) || list_is_singular(head)) {
+        return;
+    }
+
+    struct list_head large_head;
+    struct list_head small_head;
+    element_t *node, *current_node, *safe;
+
+    INIT_LIST_HEAD(&large_head);
+    INIT_LIST_HEAD(&small_head);
+
+    node = list_last_entry(head, element_t, list);
+    list_del(&node->list);
+
+    list_for_each_entry_safe (current_node, safe, head, list) {
+        if (strcmp(current_node->value, node->value) < 0) {
+            list_move_tail(&current_node->list, &small_head);
+        } else {
+            list_move_tail(&current_node->list, &large_head);
+        }
+    }
+    q_sort(&large_head, descend);
+    q_sort(&small_head, descend);
+    list_add(&node->list, head);
+    list_splice(&small_head, head);
+    list_splice_tail(&large_head, head);
+}
 
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
