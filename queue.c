@@ -140,7 +140,6 @@ bool q_delete_mid(struct list_head *head)
 bool q_delete_dup(struct list_head *head)
 {
     // https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/
-
     return true;
 }
 
@@ -252,8 +251,21 @@ int q_ascend(struct list_head *head)
  * the right side of it */
 int q_descend(struct list_head *head)
 {
-    // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    struct list_head *node = head->prev;
+    struct list_head *pnode = node->prev;
+    char *maxVal = NULL;
+
+    for (; node != head; node = pnode) {
+        element_t *entry = container_of(node, element_t, list);
+        pnode = node->prev;
+        if (!maxVal || strcmp(entry->value, maxVal) > 0) {
+            maxVal = entry->value;
+        } else {
+            list_del(node);
+            q_release_element(entry);
+        }
+    }
+    return q_size(head);
 }
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
